@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { ScrollText, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Article, FeaturedArticle } from "@/types";
+import Swal from 'sweetalert2/dist/sweetalert2.js';
+import 'sweetalert2/dist/sweetalert2.css';
 
 // Questi sono dati mock che verranno sostituiti con dati reali dal backend
 const mockArticles: Article[] = [
@@ -26,19 +28,94 @@ const mockFeaturedArticle: FeaturedArticle = {
 
 export default function DashboardPage() {
   const [selectedView, setSelectedView] = useState<"featured" | "downloaded">("featured");
-  
+  const [articles, setArticles] = useState<Article[]>(mockArticles);
+
   const handleLogoClick = () => {
     setSelectedView("featured");
+  };
+
+  const handleEditArticle = async (article: Article) => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Modifica Articolo',
+      html: `
+        <div class="space-y-4">
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Titolo
+            </label>
+            <input 
+              id="swal-title" 
+              class="w-full px-3 py-2 border rounded-md" 
+              value="${article.title}"
+            >
+          </div>
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Contenuto
+            </label>
+            <textarea 
+              id="swal-content" 
+              class="w-full px-3 py-2 border rounded-md h-32"
+            >${article.content}</textarea>
+          </div>
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              URL Immagine
+            </label>
+            <input 
+              id="swal-image" 
+              class="w-full px-3 py-2 border rounded-md"
+              value="${article.imageUrl || ''}"
+            >
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Salva',
+      cancelButtonText: 'Annulla',
+      width: '32rem',
+      preConfirm: () => {
+        const title = (document.getElementById('swal-title') as HTMLInputElement).value;
+        const content = (document.getElementById('swal-content') as HTMLTextAreaElement).value;
+        const imageUrl = (document.getElementById('swal-image') as HTMLInputElement).value;
+        
+        if (!title.trim() || !content.trim()) {
+          Swal.showValidationMessage('Titolo e contenuto sono obbligatori');
+          return false;
+        }
+        
+        return {
+          title,
+          content,
+          imageUrl: imageUrl.trim() || undefined
+        };
+      }
+    });
+
+    if (formValues) {
+      // Qui andrà la chiamata API per aggiornare l'articolo nel backend
+      // Per ora aggiorniamo solo lo stato locale
+      const updatedArticles = articles.map(a => 
+        a.id === article.id 
+          ? { ...a, ...formValues }
+          : a
+      );
+      setArticles(updatedArticles);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Articolo aggiornato!',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
   };
 
   const handleDeleteArticle = (articleId: string) => {
     // Qui andrà la chiamata API per eliminare l'articolo
     console.log("Delete article:", articleId);
-  };
-
-  const handleEditArticle = (articleId: string) => {
-    // Qui andrà la chiamata API per modificare l'articolo
-    console.log("Edit article:", articleId);
   };
 
   return (
@@ -100,7 +177,7 @@ export default function DashboardPage() {
           ) : (
             // Lista degli articoli scaricati
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockArticles.map((article) => (
+              {articles.map((article) => (
                 <Card key={article.id} className="overflow-hidden">
                   {article.imageUrl && (
                     <img
@@ -118,7 +195,7 @@ export default function DashboardPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEditArticle(article.id)}
+                        onClick={() => handleEditArticle(article)}
                       >
                         <Edit className="h-4 w-4 mr-1" />
                         Modifica
