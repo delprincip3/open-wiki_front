@@ -7,6 +7,7 @@ export interface User {
 
 export interface Article {
   id: string;
+  userId: string;
   title: string;
   content: string;
   imageUrl?: string;
@@ -19,4 +20,9 @@ export interface FeaturedArticle {
   content: string;
   imageUrl?: string;
   url: string;
+}
+
+export interface UserState {
+  user: User | null;
+  isAuthenticated: boolean;
 } 

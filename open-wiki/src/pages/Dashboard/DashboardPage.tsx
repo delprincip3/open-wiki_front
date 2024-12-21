@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Card } from "@/components/ui/card";
 import { ScrollText, Edit, Trash2 } from "lucide-react";
@@ -7,12 +7,26 @@ import type { Article } from "@/types";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/dist/sweetalert2.css';
 import { mockFeaturedArticle, sortedMockArticles } from "@/mocks/articles";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [selectedView, setSelectedView] = useState<"featured" | "downloaded">("featured");
-  const [articles, setArticles] = useState<Article[]>(sortedMockArticles);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 9;
+
+  // Quando implementerai il backend, questa funzione caricherà gli articoli dell'utente
+  useEffect(() => {
+    if (user) {
+      // Per ora usiamo i mock, ma in futuro qui ci sarà una chiamata API
+      const userArticles = sortedMockArticles.map(article => ({
+        ...article,
+        userId: user.id
+      }));
+      setArticles(userArticles);
+    }
+  }, [user]);
 
   // Calcola gli articoli da mostrare nella pagina corrente
   const indexOfLastArticle = currentPage * articlesPerPage;
@@ -133,6 +147,28 @@ export default function DashboardPage() {
   };
 
   const handleReadFullArticle = async () => {
+    // Controlla se l'articolo esiste già
+    const articleExists = articles.some(
+      article => article.title === mockFeaturedArticle.title
+    );
+
+    if (articleExists) {
+      const confirmResult = await Swal.fire({
+        title: 'Articolo già presente',
+        text: 'Questo articolo è già stato scaricato. Vuoi sovrascriverlo con la versione più recente?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3366cc',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sì, sovrascrivi',
+        cancelButtonText: 'No, mantieni la versione esistente'
+      });
+
+      if (!confirmResult.isConfirmed) {
+        return;
+      }
+    }
+
     const result = await Swal.fire({
       title: mockFeaturedArticle.title,
       html: `
@@ -163,9 +199,16 @@ export default function DashboardPage() {
     });
 
     if (result.isConfirmed) {
-      // Qui andrà la logica per salvare l'articolo
+      // Se l'articolo esiste, lo rimuoviamo prima di aggiungere quello nuovo
+      if (articleExists) {
+        setArticles(prevArticles => 
+          prevArticles.filter(article => article.title !== mockFeaturedArticle.title)
+        );
+      }
+
+      // Aggiungi il nuovo articolo
       const newArticle: Article = {
-        id: Date.now().toString(), // ID temporaneo, nel backend sarà generato dal DB
+        id: Date.now().toString(),
         title: mockFeaturedArticle.title,
         content: mockFeaturedArticle.content,
         imageUrl: mockFeaturedArticle.imageUrl,
@@ -176,7 +219,7 @@ export default function DashboardPage() {
 
       await Swal.fire({
         icon: 'success',
-        title: 'Articolo salvato!',
+        title: articleExists ? 'Articolo aggiornato!' : 'Articolo salvato!',
         text: 'Puoi trovarlo nella sezione "Articoli Scaricati"',
         toast: true,
         position: 'top-end',
@@ -184,7 +227,6 @@ export default function DashboardPage() {
         timer: 3000
       });
 
-      // Opzionale: passa automaticamente alla vista degli articoli scaricati
       setSelectedView("downloaded");
     }
   };

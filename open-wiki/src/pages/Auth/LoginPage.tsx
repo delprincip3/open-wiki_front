@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginPageProps {
   onBack: () => void;
@@ -12,16 +13,24 @@ interface LoginPageProps {
 
 export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Per ora navighiamo direttamente alla dashboard
-    // In futuro qui ci sarà la vera logica di autenticazione
-    navigate("/dashboard");
+    setError(null);
+
+    const success = await login(formData.username, formData.password);
+    
+    if (success) {
+      navigate('/dashboard');
+    } else {
+      setError('Username o password non validi');
+    }
   };
 
   return (
@@ -45,6 +54,11 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="text-sm text-red-500 text-center">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <label
                 htmlFor="username"
