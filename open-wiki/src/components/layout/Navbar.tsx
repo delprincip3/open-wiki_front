@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import type { User } from "@/types";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/dist/sweetalert2.css';
+import { useNavigate } from 'react-router-dom';
 
 // Questo è un dato mock che verrà sostituito con dati reali dal backend
 const mockUser: User = {
@@ -12,9 +13,12 @@ const mockUser: User = {
 
 interface NavbarProps {
   onLogoClick: () => void;
+  currentView: "featured" | "downloaded";
 }
 
-export default function Navbar({ onLogoClick }: NavbarProps) {
+export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
+  const navigate = useNavigate();
+  
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const searchTerm = e.currentTarget.search.value;
@@ -34,10 +38,28 @@ export default function Navbar({ onLogoClick }: NavbarProps) {
       }
     });
 
-    tooltip.fire({
-      icon: 'info',
-      title: 'Clicca per tornare all\'articolo del giorno'
-    });
+    // Mostra un messaggio diverso in base alla vista corrente
+    if (currentView === "featured") {
+      tooltip.fire({
+        icon: 'info',
+        title: 'Torna alla pagina iniziale'
+      });
+    } else {
+      tooltip.fire({
+        icon: 'info',
+        title: 'Clicca per tornare all\'articolo del giorno'
+      });
+    }
+  };
+
+  const handleLogoClick = () => {
+    if (currentView === "featured") {
+      // Se siamo già nell'articolo del giorno, torniamo alla welcome page
+      navigate('/');
+    } else {
+      // Altrimenti torniamo all'articolo del giorno
+      onLogoClick();
+    }
   };
 
   return (
@@ -45,7 +67,7 @@ export default function Navbar({ onLogoClick }: NavbarProps) {
       <div className="h-full flex items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center">
           <button
-            onClick={onLogoClick}
+            onClick={handleLogoClick}
             onMouseEnter={handleLogoHover}
             className="text-2xl font-serif text-[#3366cc] hover:text-[#2a4b8d] transition-colors"
           >
