@@ -7,7 +7,7 @@ export default function WelcomePage() {
   const [showLogin, setShowLogin] = useState(false);
 
   if (showLogin) {
-    return <LoginPage />;
+    return <LoginPage onBack={() => setShowLogin(false)} />;
   }
 
   return (

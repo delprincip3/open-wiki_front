@@ -4,7 +4,11 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-export default function LoginPage() {
+interface LoginPageProps {
+  onBack: () => void;
+}
+
+export default function LoginPage({ onBack }: LoginPageProps) {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -23,7 +27,7 @@ export default function LoginPage() {
           <Button
             variant="ghost"
             className="absolute left-4 top-4"
-            onClick={() => window.history.back()}
+            onClick={onBack}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Indietro
