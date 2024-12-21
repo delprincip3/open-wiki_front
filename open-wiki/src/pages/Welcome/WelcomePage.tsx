@@ -1,7 +1,15 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import LoginPage from "../Auth/LoginPage";
 
 export default function WelcomePage() {
+  const [showLogin, setShowLogin] = useState(false);
+
+  if (showLogin) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] px-4 py-8">
       {/* Header con logo e titolo */}
@@ -31,7 +39,11 @@ export default function WelcomePage() {
             Accedi per iniziare a contribuire alla più grande enciclopedia collaborativa
           </p>
 
-          <Button className="w-full text-lg py-6 bg-[#3366cc] hover:bg-[#2a4b8d]" size="lg">
+          <Button 
+            className="w-full text-lg py-6 bg-[#3366cc] hover:bg-[#2a4b8d]" 
+            size="lg"
+            onClick={() => setShowLogin(true)}
+          >
             Sign up / Login
           </Button>
         </Card>
