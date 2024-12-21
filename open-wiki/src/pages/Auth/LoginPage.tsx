@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface LoginPageProps {
   onBack: () => void;
@@ -10,6 +11,7 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -17,8 +19,9 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Qui andrà la logica di autenticazione
-    console.log("Form submitted:", formData);
+    // Per ora navighiamo direttamente alla dashboard
+    // In futuro qui ci sarà la vera logica di autenticazione
+    navigate("/dashboard");
   };
 
   return (
