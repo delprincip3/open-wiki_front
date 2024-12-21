@@ -2,12 +2,28 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import LoginPage from "../Auth/LoginPage";
+import RegisterPage from "../Auth/RegisterPage";
+
+type AuthPage = "welcome" | "login" | "register";
 
 export default function WelcomePage() {
-  const [showLogin, setShowLogin] = useState(false);
+  const [currentPage, setCurrentPage] = useState<AuthPage>("welcome");
 
-  if (showLogin) {
-    return <LoginPage onBack={() => setShowLogin(false)} />;
+  if (currentPage === "login") {
+    return (
+      <LoginPage 
+        onBack={() => setCurrentPage("welcome")}
+        onRegister={() => setCurrentPage("register")}
+      />
+    );
+  }
+
+  if (currentPage === "register") {
+    return (
+      <RegisterPage 
+        onBack={() => setCurrentPage("login")} 
+      />
+    );
   }
 
   return (
@@ -42,7 +58,7 @@ export default function WelcomePage() {
           <Button 
             className="w-full text-lg py-6 bg-[#3366cc] hover:bg-[#2a4b8d]" 
             size="lg"
-            onClick={() => setShowLogin(true)}
+            onClick={() => setCurrentPage("login")}
           >
             Sign up / Login
           </Button>

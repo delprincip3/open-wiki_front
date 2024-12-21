@@ -4,20 +4,29 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-interface LoginPageProps {
+interface RegisterPageProps {
   onBack: () => void;
-  onRegister: () => void;
 }
 
-export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
+export default function RegisterPage({ onBack }: RegisterPageProps) {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    confirmPassword: "",
   });
+
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Qui andrà la logica di autenticazione
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError("Le password non coincidono");
+      return;
+    }
+    
+    setError(null);
+    // Qui andrà la logica di registrazione
     console.log("Form submitted:", formData);
   };
 
@@ -34,10 +43,10 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
             Indietro
           </Button>
           <h2 className="text-2xl font-semibold tracking-tight pt-6">
-            Accedi a Open Wiki
+            Registrati su Open Wiki
           </h2>
           <p className="text-sm text-gray-500">
-            Inserisci le tue credenziali per accedere
+            Crea il tuo account per contribuire alla community
           </p>
         </CardHeader>
         <CardContent>
@@ -52,7 +61,7 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
               <Input
                 id="username"
                 type="text"
-                placeholder="Il tuo username"
+                placeholder="Scegli il tuo username"
                 value={formData.username}
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
@@ -70,7 +79,7 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
               <Input
                 id="password"
                 type="password"
-                placeholder="La tua password"
+                placeholder="Scegli una password"
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
@@ -78,31 +87,46 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium text-gray-700"
+              >
+                Conferma Password
+              </label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Conferma la tua password"
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
+                required
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-red-500 mt-2">{error}</p>
+            )}
             <Button
               type="submit"
               className="w-full bg-[#3366cc] hover:bg-[#2a4b8d]"
             >
-              Accedi
+              Registrati
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 text-center">
           <div className="text-sm text-gray-500">
-            Non hai un account?{" "}
+            Hai già un account?{" "}
             <button 
               type="button"
-              onClick={onRegister}
+              onClick={onBack} 
               className="text-[#3366cc] hover:underline"
             >
-              Registrati ora
+              Accedi
             </button>
           </div>
-          <button 
-            type="button"
-            className="text-sm text-[#3366cc] hover:underline"
-          >
-            Password dimenticata?
-          </button>
         </CardFooter>
       </Card>
     </div>
