@@ -8,7 +8,9 @@ import { useNavigate } from 'react-router-dom';
 // Questo è un dato mock che verrà sostituito con dati reali dal backend
 const mockUser: User = {
   username: "Mario Rossi",
-  id: "1"
+  id: "1",
+  email: "mario.rossi@example.com",
+  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mario"
 };
 
 interface NavbarProps {
@@ -25,6 +27,16 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
     console.log("Search submitted:", searchTerm);
   };
 
+  const handleLogoClick = () => {
+    if (currentView === "featured") {
+      // Se siamo nell'articolo del giorno, torniamo alla welcome page
+      navigate('/');
+    } else {
+      // Altrimenti torniamo all'articolo del giorno
+      onLogoClick();
+    }
+  };
+
   const handleLogoHover = () => {
     const tooltip = Swal.mixin({
       toast: true,
@@ -38,27 +50,102 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
       }
     });
 
-    // Mostra un messaggio diverso in base alla vista corrente
-    if (currentView === "featured") {
-      tooltip.fire({
-        icon: 'info',
-        title: 'Torna alla pagina iniziale'
-      });
-    } else {
-      tooltip.fire({
-        icon: 'info',
-        title: 'Clicca per tornare all\'articolo del giorno'
-      });
-    }
+    tooltip.fire({
+      icon: 'info',
+      title: currentView === "featured" 
+        ? 'Clicca per tornare alla pagina di benvenuto'
+        : 'Clicca per tornare all\'articolo del giorno'
+    });
   };
 
-  const handleLogoClick = () => {
-    if (currentView === "featured") {
-      // Se siamo già nell'articolo del giorno, torniamo alla welcome page
-      navigate('/');
-    } else {
-      // Altrimenti torniamo all'articolo del giorno
-      onLogoClick();
+  const handleProfileHover = () => {
+    const tooltip = Swal.mixin({
+      toast: true,
+      position: 'top',
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: false
+    });
+
+    tooltip.fire({
+      icon: 'info',
+      title: 'Modifica il profilo'
+    });
+  };
+
+  const handleProfileClick = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Modifica Profilo',
+      html: `
+        <div class="space-y-4">
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input 
+              id="swal-username" 
+              class="w-full px-3 py-2 border rounded-md"
+              value="${mockUser.username}"
+            >
+          </div>
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input 
+              id="swal-email" 
+              type="email"
+              class="w-full px-3 py-2 border rounded-md"
+              value="${mockUser.email}"
+            >
+          </div>
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Avatar URL
+            </label>
+            <input 
+              id="swal-avatar" 
+              class="w-full px-3 py-2 border rounded-md"
+              value="${mockUser.avatar}"
+            >
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Salva',
+      cancelButtonText: 'Annulla',
+      width: '32rem',
+      preConfirm: () => {
+        const username = (document.getElementById('swal-username') as HTMLInputElement).value;
+        const email = (document.getElementById('swal-email') as HTMLInputElement).value;
+        const avatar = (document.getElementById('swal-avatar') as HTMLInputElement).value;
+        
+        if (!username.trim() || !email.trim()) {
+          Swal.showValidationMessage('Username e email sono obbligatori');
+          return false;
+        }
+        
+        if (!email.includes('@')) {
+          Swal.showValidationMessage('Email non valida');
+          return false;
+        }
+        
+        return { username, email, avatar };
+      }
+    });
+
+    if (formValues) {
+      // Qui andrà la chiamata API per aggiornare il profilo nel backend
+      console.log('Profilo aggiornato:', formValues);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Profilo aggiornato!',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
   };
 
@@ -88,9 +175,13 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
         </form>
 
         <div className="flex items-center space-x-4">
-          <span className="text-gray-700">
+          <button
+            className="text-gray-700 hover:text-gray-900 transition-colors"
+            onClick={handleProfileClick}
+            onMouseEnter={handleProfileHover}
+          >
             {mockUser.username}
-          </span>
+          </button>
         </div>
       </div>
     </nav>

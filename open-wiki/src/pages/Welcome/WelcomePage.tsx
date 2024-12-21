@@ -34,7 +34,7 @@ export default function WelcomePage() {
           Benvenuto in Open Wiki
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          La tua fonte di conoscenza libera e collaborativa
+          La tua biblioteca personale di conoscenza, ispirata da Wikipedia
         </p>
       </header>
 
@@ -47,12 +47,12 @@ export default function WelcomePage() {
           
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <p className="text-gray-600">
-              Il clone ufficiale di Wikipedia
+              Il clone ufficiale di Wikipedia che ti permette di salvare e personalizzare i tuoi articoli preferiti
             </p>
           </div>
 
           <p className="text-gray-700 mb-8">
-            Accedi per iniziare a contribuire alla più grande enciclopedia collaborativa
+            Accedi per iniziare a creare la tua collezione personale di articoli Wikipedia
           </p>
 
           <Button 
@@ -68,36 +68,44 @@ export default function WelcomePage() {
         <div className="space-y-6">
           <div className="bg-white/80 backdrop-blur rounded-lg p-6 shadow-sm">
             <h3 className="text-xl font-semibold mb-3 text-gray-800">
-              Perché Open Wiki?
+              Caratteristiche Principali
             </h3>
             <ul className="space-y-3 text-gray-600">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                Accesso a milioni di articoli in diverse lingue
+                Articolo del giorno sempre aggiornato dalla Wikipedia ufficiale
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                Contribuisci con le tue conoscenze
+                Ricerca istantanea in tutti gli articoli di Wikipedia
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                Interfaccia moderna e intuitiva
+                Salva i tuoi articoli preferiti per leggerli offline
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">•</span>
+                Modifica e personalizza gli articoli salvati
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">•</span>
+                Interfaccia moderna e intuitiva, ottimizzata per ogni dispositivo
               </li>
             </ul>
           </div>
 
           <div className="bg-white/80 backdrop-blur rounded-lg p-6 shadow-sm">
             <h3 className="text-xl font-semibold mb-3 text-gray-800">
-              Statistiche
+              La Tua Wikipedia Personale
             </h3>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-[#3366cc]">1M+</p>
-                <p className="text-gray-600">Articoli</p>
+                <p className="text-2xl font-bold text-[#3366cc]">Illimitati</p>
+                <p className="text-gray-600">Articoli da salvare</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#3366cc]">500K+</p>
-                <p className="text-gray-600">Utenti</p>
+                <p className="text-2xl font-bold text-[#3366cc]">100%</p>
+                <p className="text-gray-600">Personalizzabile</p>
               </div>
             </div>
           </div>
@@ -107,8 +115,8 @@ export default function WelcomePage() {
       {/* Footer */}
       <footer className="mt-16 text-center text-gray-600">
         <p className="max-w-2xl mx-auto">
-          Open Wiki è un progetto open source che mira a rendere la conoscenza accessibile a tutti.
-          Unisciti a noi in questa missione.
+          Open Wiki trasforma il modo in cui interagisci con Wikipedia. 
+          Salva, personalizza e organizza la conoscenza nel modo che preferisci.
         </p>
       </footer>
     </div>

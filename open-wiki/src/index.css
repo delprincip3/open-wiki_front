@@ -10,3 +10,31 @@
 body {
   @apply bg-[#FDFBF7];
 }
+
+/* Stili personalizzati per Sweetalert2 */
+.swal2-popup-custom {
+  padding: 1.5rem !important;
+}
+
+.swal2-html-container-custom {
+  margin: 1rem 0 !important;
+  padding: 0 !important;
+}
+
+.swal2-html-container-custom::-webkit-scrollbar {
+  width: 8px;
+}
+
+.swal2-html-container-custom::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.swal2-html-container-custom::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.swal2-html-container-custom::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}

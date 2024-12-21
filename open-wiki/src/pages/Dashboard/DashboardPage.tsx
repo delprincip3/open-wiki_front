@@ -3,108 +3,14 @@ import Navbar from "@/components/layout/Navbar";
 import { Card } from "@/components/ui/card";
 import { ScrollText, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Article, FeaturedArticle } from "@/types";
+import type { Article } from "@/types";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/dist/sweetalert2.css';
-
-// Funzione helper per generare una data casuale degli ultimi 30 giorni
-const getRandomRecentDate = () => {
-  const date = new Date();
-  date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-  return date.toISOString();
-};
-
-// Articoli mock ordinati per data di download
-const mockArticles: Article[] = [
-  {
-    id: "1",
-    title: "Storia di Roma Antica",
-    content: "La storia di Roma antica è una delle più affascinanti...",
-    imageUrl: "https://picsum.photos/seed/roma/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "2",
-    title: "Leonardo da Vinci",
-    content: "Leonardo da Vinci è stato un genio del Rinascimento...",
-    imageUrl: "https://picsum.photos/seed/leonardo/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "3",
-    title: "La Divina Commedia",
-    content: "Il capolavoro di Dante Alighieri...",
-    imageUrl: "https://picsum.photos/seed/dante/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "4",
-    title: "Il Sistema Solare",
-    content: "Il nostro sistema solare comprende otto pianeti...",
-    imageUrl: "https://picsum.photos/seed/space/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "5",
-    title: "La Rivoluzione Industriale",
-    content: "Un periodo di grandi cambiamenti tecnologici...",
-    imageUrl: "https://picsum.photos/seed/industry/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "6",
-    title: "Il DNA",
-    content: "La molecola della vita e la sua struttura...",
-    imageUrl: "https://picsum.photos/seed/dna/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "7",
-    title: "La Grande Muraglia Cinese",
-    content: "Una delle più grandi opere architettoniche...",
-    imageUrl: "https://picsum.photos/seed/wall/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "8",
-    title: "Le Piramidi di Giza",
-    content: "Le misteriose costruzioni dell'antico Egitto...",
-    imageUrl: "https://picsum.photos/seed/pyramids/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "9",
-    title: "La Teoria della Relatività",
-    content: "Einstein e la sua rivoluzionaria teoria...",
-    imageUrl: "https://picsum.photos/seed/einstein/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "10",
-    title: "Il Rinascimento Italiano",
-    content: "Un periodo di straordinaria fioritura artistica...",
-    imageUrl: "https://picsum.photos/seed/renaissance/400/300",
-    dateDownloaded: getRandomRecentDate()
-  },
-  {
-    id: "11",
-    title: "La Prima Guerra Mondiale",
-    content: "Il conflitto che cambiò il mondo...",
-    imageUrl: "https://picsum.photos/seed/ww1/400/300",
-    dateDownloaded: getRandomRecentDate()
-  }
-].sort((a, b) => new Date(b.dateDownloaded).getTime() - new Date(a.dateDownloaded).getTime());
-
-const mockFeaturedArticle: FeaturedArticle = {
-  title: "La Storia dei Dinosauri",
-  excerpt: "Scopri le ultime scoperte sui dinosauri...",
-  imageUrl: "https://picsum.photos/400/200",
-  url: "https://wikipedia.org/..."
-};
+import { mockFeaturedArticle, sortedMockArticles } from "@/mocks/articles";
 
 export default function DashboardPage() {
   const [selectedView, setSelectedView] = useState<"featured" | "downloaded">("featured");
-  const [articles, setArticles] = useState<Article[]>(mockArticles);
+  const [articles, setArticles] = useState<Article[]>(sortedMockArticles);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 9;
 
@@ -226,6 +132,63 @@ export default function DashboardPage() {
     }
   };
 
+  const handleReadFullArticle = async () => {
+    const result = await Swal.fire({
+      title: mockFeaturedArticle.title,
+      html: `
+        <div class="text-left max-h-[70vh] overflow-y-auto">
+          <img 
+            src="${mockFeaturedArticle.imageUrl}" 
+            alt="${mockFeaturedArticle.title}"
+            class="w-full h-48 object-cover rounded-lg mb-4 sticky top-0"
+          />
+          <div class="space-y-4 px-1">
+            ${mockFeaturedArticle.content.split('\n\n').map(paragraph => 
+              `<p class="text-gray-600 text-base leading-relaxed">${paragraph.trim()}</p>`
+            ).join('')}
+          </div>
+        </div>
+      `,
+      width: '42rem',
+      showCloseButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'Download',
+      denyButtonText: 'Chiudi',
+      confirmButtonColor: '#3366cc',
+      denyButtonColor: '#64748b',
+      customClass: {
+        htmlContainer: 'swal2-html-container-custom',
+        popup: 'swal2-popup-custom'
+      }
+    });
+
+    if (result.isConfirmed) {
+      // Qui andrà la logica per salvare l'articolo
+      const newArticle: Article = {
+        id: Date.now().toString(), // ID temporaneo, nel backend sarà generato dal DB
+        title: mockFeaturedArticle.title,
+        content: mockFeaturedArticle.content,
+        imageUrl: mockFeaturedArticle.imageUrl,
+        dateDownloaded: new Date().toISOString()
+      };
+
+      setArticles(prevArticles => [newArticle, ...prevArticles]);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Articolo salvato!',
+        text: 'Puoi trovarlo nella sezione "Articoli Scaricati"',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+
+      // Opzionale: passa automaticamente alla vista degli articoli scaricati
+      setSelectedView("downloaded");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar 
@@ -275,14 +238,12 @@ export default function DashboardPage() {
                 )}
                 <h2 className="text-lg lg:text-xl font-semibold">{mockFeaturedArticle.title}</h2>
                 <p className="text-gray-600">{mockFeaturedArticle.excerpt}</p>
-                <a
-                  href={mockFeaturedArticle.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+                <button
+                  onClick={handleReadFullArticle}
+                  className="text-blue-600 hover:underline text-left"
                 >
                   Leggi l'articolo completo
-                </a>
+                </button>
               </div>
             </Card>
           ) : (

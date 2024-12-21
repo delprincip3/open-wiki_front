@@ -1,6 +1,8 @@
 export interface User {
   username: string;
   id: string;
+  email: string;
+  avatar: string;
 }
 
 export interface Article {
@@ -14,6 +16,7 @@ export interface Article {
 export interface FeaturedArticle {
   title: string;
   excerpt: string;
+  content: string;
   imageUrl?: string;
   url: string;
 } 
