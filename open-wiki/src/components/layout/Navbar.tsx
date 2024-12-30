@@ -44,7 +44,7 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
       showConfirmButton: false,
       timer: 2000,
       timerProgressBar: false,
-      didOpen: (toast) => {
+      didOpen: (toast: HTMLElement) => {
         toast.addEventListener('mouseenter', Swal.stopTimer)
         toast.addEventListener('mouseleave', Swal.resumeTimer)
       }
