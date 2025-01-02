@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { authService } from '@/services/auth';
 
 interface RegisterPageProps {
   onBack: () => void;
@@ -17,17 +18,29 @@ export default function RegisterPage({ onBack }: RegisterPageProps) {
 
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (formData.password !== formData.confirmPassword) {
-      setError("Le password non coincidono");
-      return;
+        setError("Le password non coincidono");
+        return;
     }
     
-    setError(null);
-    // Qui andrà la logica di registrazione
-    console.log("Form submitted:", formData);
+    try {
+        await authService.register({
+            username: formData.username,
+            password: formData.password
+        });
+        onBack(); // Redirect al login dopo registrazione
+    } catch (error) {
+        if (error instanceof Error) {
+            setError(error.message);
+        } else {
+            setError("Errore durante la registrazione");
+        }
+        console.error('Registration error:', error);
+    }
   };
 
   return (

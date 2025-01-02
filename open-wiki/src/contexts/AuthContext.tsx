@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { User, UserState } from '@/types';
-import { defaultUser, mockCredentials } from '@/mocks/users';
+import { authService } from '@/services/auth';
 
 interface AuthContextType extends UserState {
   login: (username: string, password: string) => Promise<boolean>;
@@ -26,24 +26,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    // Mock della verifica delle credenziali
-    if (username === mockCredentials.username && password === mockCredentials.password) {
-      setAuthState({
-        user: defaultUser,
-        isAuthenticated: true
-      });
-      localStorage.setItem('user', JSON.stringify(defaultUser));
-      return true;
+    try {
+        const data = await authService.login(username, password);
+        setAuthState({
+            user: data.user,
+            isAuthenticated: true
+        });
+        return true;
+    } catch (error) {
+        return false;
     }
-    return false;
   };
 
-  const logout = () => {
-    setAuthState({
-      user: null,
-      isAuthenticated: false
-    });
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+        await authService.logout();
+    } finally {
+        setAuthState({
+            user: null,
+            isAuthenticated: false
+        });
+    }
   };
 
   return (
