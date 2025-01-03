@@ -4,6 +4,8 @@ import type { User } from "@/types";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/dist/sweetalert2.css';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/auth';
 
 // Questo è un dato mock che verrà sostituito con dati reali dal backend
 const mockUser: User = {
@@ -20,6 +22,7 @@ interface NavbarProps {
 
 export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
   const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
   
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,68 +87,63 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
             </label>
             <input 
               id="swal-username" 
-              class="w-full px-3 py-2 border rounded-md"
-              value="${mockUser.username}"
-            >
+              class="w-full p-2 border rounded" 
+              value="${user?.username || ''}"
+            />
           </div>
           <div class="text-left">
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Password Attuale
             </label>
             <input 
-              id="swal-email" 
-              type="email"
-              class="w-full px-3 py-2 border rounded-md"
-              value="${mockUser.email}"
-            >
+              type="password" 
+              id="swal-current-password" 
+              class="w-full p-2 border rounded"
+            />
           </div>
           <div class="text-left">
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Avatar URL
+              Nuova Password
             </label>
             <input 
-              id="swal-avatar" 
-              class="w-full px-3 py-2 border rounded-md"
-              value="${mockUser.avatar}"
-            >
+              type="password" 
+              id="swal-new-password" 
+              class="w-full p-2 border rounded"
+            />
           </div>
         </div>
       `,
       showCancelButton: true,
       confirmButtonText: 'Salva',
       cancelButtonText: 'Annulla',
-      width: '32rem',
       preConfirm: () => {
-        const username = (document.getElementById('swal-username') as HTMLInputElement).value;
-        const email = (document.getElementById('swal-email') as HTMLInputElement).value;
-        const avatar = (document.getElementById('swal-avatar') as HTMLInputElement).value;
-        
-        if (!username.trim() || !email.trim()) {
-          Swal.showValidationMessage('Username e email sono obbligatori');
-          return false;
-        }
-        
-        if (!email.includes('@')) {
-          Swal.showValidationMessage('Email non valida');
-          return false;
-        }
-        
-        return { username, email, avatar };
+        return {
+          username: (document.getElementById('swal-username') as HTMLInputElement).value,
+          currentPassword: (document.getElementById('swal-current-password') as HTMLInputElement).value,
+          newPassword: (document.getElementById('swal-new-password') as HTMLInputElement).value,
+        };
       }
     });
 
     if (formValues) {
-      // Qui andrà la chiamata API per aggiornare il profilo nel backend
-      console.log('Profilo aggiornato:', formValues);
-      
-      await Swal.fire({
-        icon: 'success',
-        title: 'Profilo aggiornato!',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      try {
+        await authService.updateProfile(formValues);
+        await refreshUser();
+        await Swal.fire({
+          icon: 'success',
+          title: 'Profilo aggiornato!',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      } catch (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Errore',
+          text: error instanceof Error ? error.message : 'Errore durante l\'aggiornamento del profilo',
+        });
+      }
     }
   };
 
@@ -180,7 +178,7 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
             onClick={handleProfileClick}
             onMouseEnter={handleProfileHover}
           >
-            {mockUser.username}
+            {user?.username || 'Utente'}
           </button>
         </div>
       </div>

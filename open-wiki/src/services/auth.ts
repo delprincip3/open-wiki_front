@@ -93,5 +93,33 @@ export const authService = {
         }
 
         return response.json();
+    },
+
+    async updateProfile(updates: {
+        username?: string;
+        currentPassword?: string;
+        newPassword?: string;
+    }) {
+        try {
+            const response = await fetch(`${API_URL}/auth/update-profile`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Profile update failed');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Profile update error:', error);
+            throw error;
+        }
     }
 }; 
