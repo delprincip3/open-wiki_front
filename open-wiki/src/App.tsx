@@ -3,6 +3,7 @@ import WelcomePage from "./pages/Welcome/WelcomePage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import TestApi from "./pages/TestApi";
 
 function App() {
   return (
@@ -15,6 +16,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/test-api" 
+            element={
+              <ProtectedRoute>
+                <TestApi />
               </ProtectedRoute>
             } 
           />

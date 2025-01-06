@@ -3,11 +3,12 @@ import Navbar from "@/components/layout/Navbar";
 import { Card } from "@/components/ui/card";
 import { ScrollText, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Article } from "@/types";
+import type { Article, WikiArticle } from "@/types";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/dist/sweetalert2.css';
-import { mockFeaturedArticle, sortedMockArticles } from "@/mocks/articles";
 import { useAuth } from "@/contexts/AuthContext";
+import { wikipediaService } from '@/services/wikipedia';
+import { articleService } from '@/services/articles';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -15,18 +16,35 @@ export default function DashboardPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 9;
+  const [featuredArticle, setFeaturedArticle] = useState<WikiArticle | null>(null);
 
-  // Quando implementerai il backend, questa funzione caricherà gli articoli dell'utente
   useEffect(() => {
-    if (user) {
-      // Per ora usiamo i mock, ma in futuro qui ci sarà una chiamata API
-      const userArticles = sortedMockArticles.map(article => ({
-        ...article,
-        userId: user.id
-      }));
-      setArticles(userArticles);
+    if (selectedView === "featured") {
+      loadFeaturedArticle();
+    } else {
+      loadSavedArticles();
     }
-  }, [user]);
+  }, [selectedView, user]);
+
+  const loadFeaturedArticle = async () => {
+    try {
+      const article = await wikipediaService.getFeaturedArticle();
+      setFeaturedArticle(article);
+    } catch (error) {
+      console.error("Failed to load featured article:", error);
+    }
+  };
+
+  const loadSavedArticles = async () => {
+    if (user) {
+      try {
+        const userArticles = await articleService.getArticles();
+        setArticles(userArticles);
+      } catch (error) {
+        console.error("Failed to load saved articles:", error);
+      }
+    }
+  };
 
   // Calcola gli articoli da mostrare nella pagina corrente
   const indexOfLastArticle = currentPage * articlesPerPage;
@@ -147,87 +165,96 @@ export default function DashboardPage() {
   };
 
   const handleReadFullArticle = async () => {
-    // Controlla se l'articolo esiste già
-    const articleExists = articles.some(
-      article => article.title === mockFeaturedArticle.title
-    );
+    if (!featuredArticle) return;
 
-    if (articleExists) {
-      const confirmResult = await Swal.fire({
-        title: 'Articolo già presente',
-        text: 'Questo articolo è già stato scaricato. Vuoi sovrascriverlo con la versione più recente?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3366cc',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sì, sovrascrivi',
-        cancelButtonText: 'No, mantieni la versione esistente'
-      });
+    try {
+        const result = await Swal.fire({
+            title: featuredArticle.title,
+            html: `
+                <div class="max-w-2xl mx-auto">
+                    ${featuredArticle.thumbnail ? `
+                        <div class="mb-4">
+                            <img 
+                                src="${featuredArticle.thumbnail.url}" 
+                                alt="${featuredArticle.title}"
+                                class="w-full max-h-[300px] object-contain rounded-lg"
+                            />
+                        </div>
+                    ` : ''}
+                    <div class="text-left space-y-4">
+                        <p class="text-gray-600">
+                            ${featuredArticle.description || ''}
+                        </p>
+                        <div class="prose max-w-none">
+                            ${featuredArticle.html || featuredArticle.content || ''}
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: '600px',
+            showConfirmButton: true,
+            confirmButtonText: 'Salva articolo',
+            showCancelButton: true,
+            cancelButtonText: 'Chiudi',
+            showCloseButton: true,
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            customClass: {
+                container: 'swal-article-container',
+                popup: 'swal-article-popup',
+                content: 'swal-article-content'
+            }
+        });
 
-      if (!confirmResult.isConfirmed) {
-        return;
-      }
+        if (result.isConfirmed) {
+            await handleSaveArticle(featuredArticle);
+        }
+    } catch (error) {
+        console.error("Failed to show article:", error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Errore',
+            text: 'Impossibile visualizzare l\'articolo'
+        });
     }
+  };
 
-    const result = await Swal.fire({
-      title: mockFeaturedArticle.title,
-      html: `
-        <div class="text-left max-h-[70vh] overflow-y-auto">
-          <img 
-            src="${mockFeaturedArticle.imageUrl}" 
-            alt="${mockFeaturedArticle.title}"
-            class="w-full h-48 object-cover rounded-lg mb-4 sticky top-0"
-          />
-          <div class="space-y-4 px-1">
-            ${mockFeaturedArticle.content.split('\n\n').map(paragraph => 
-              `<p class="text-gray-600 text-base leading-relaxed">${paragraph.trim()}</p>`
-            ).join('')}
-          </div>
-        </div>
-      `,
-      width: '42rem',
-      showCloseButton: true,
-      showDenyButton: true,
-      confirmButtonText: 'Download',
-      denyButtonText: 'Chiudi',
-      confirmButtonColor: '#3366cc',
-      denyButtonColor: '#64748b',
-      customClass: {
-        htmlContainer: 'swal2-html-container-custom',
-        popup: 'swal2-popup-custom'
-      }
-    });
+  const handleSaveArticle = async (article: WikiArticle) => {
+    try {
+        // Verifichiamo che tutti i campi necessari esistano
+        if (!article || !article.title || !article.html) {
+            throw new Error('Dati articolo incompleti');
+        }
 
-    if (result.isConfirmed) {
-      // Se l'articolo esiste, lo rimuoviamo prima di aggiungere quello nuovo
-      if (articleExists) {
-        setArticles(prevArticles => 
-          prevArticles.filter(article => article.title !== mockFeaturedArticle.title)
-        );
-      }
+        const articleToSave = {
+            title: article.title,
+            content: article.html || '',
+            imageUrl: article.thumbnail?.url || undefined,
+            pageId: article.id?.toString() || '',
+            wikiUrl: article.key ? `https://it.wikipedia.org/wiki/${article.key}` : ''
+        };
 
-      // Aggiungi il nuovo articolo
-      const newArticle: Article = {
-        id: Date.now().toString(),
-        title: mockFeaturedArticle.title,
-        content: mockFeaturedArticle.content,
-        imageUrl: mockFeaturedArticle.imageUrl,
-        dateDownloaded: new Date().toISOString()
-      };
+        await articleService.saveArticle(articleToSave);
 
-      setArticles(prevArticles => [newArticle, ...prevArticles]);
+        await Swal.fire({
+            icon: 'success',
+            title: 'Articolo salvato',
+            text: 'L\'articolo è stato salvato con successo',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
 
-      await Swal.fire({
-        icon: 'success',
-        title: articleExists ? 'Articolo aggiornato!' : 'Articolo salvato!',
-        text: 'Puoi trovarlo nella sezione "Articoli Scaricati"',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-      });
-
-      setSelectedView("downloaded");
+        setSelectedView("downloaded");
+        await loadSavedArticles();
+    } catch (error) {
+        console.error("Failed to save article:", error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Errore',
+            text: 'Impossibile salvare l\'articolo. Verifica che tutti i dati siano presenti.'
+        });
     }
   };
 
@@ -271,15 +298,22 @@ export default function DashboardPage() {
                 <h1 className="text-xl lg:text-2xl font-serif text-gray-900">
                   Articolo del Giorno
                 </h1>
-                {mockFeaturedArticle.imageUrl && (
-                  <img
-                    src={mockFeaturedArticle.imageUrl}
-                    alt={mockFeaturedArticle.title}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
+                {featuredArticle && featuredArticle.thumbnail && (
+                    <div className="relative h-48 w-full overflow-hidden rounded-lg mb-4">
+                        <img
+                            src={featuredArticle.thumbnail.url.replace(/^\/\//, 'https://')}
+                            alt={featuredArticle.title}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onError={(e) => {
+                                console.error('Errore caricamento immagine:', featuredArticle.thumbnail?.url);
+                                e.currentTarget.style.display = 'none';
+                            }}
+                            onLoad={() => console.log('Immagine caricata:', featuredArticle.thumbnail?.url)}
+                        />
+                    </div>
                 )}
-                <h2 className="text-lg lg:text-xl font-semibold">{mockFeaturedArticle.title}</h2>
-                <p className="text-gray-600">{mockFeaturedArticle.excerpt}</p>
+                <h2 className="text-lg lg:text-xl font-semibold">{featuredArticle?.title}</h2>
+                <p className="text-gray-600">{featuredArticle?.description}</p>
                 <button
                   onClick={handleReadFullArticle}
                   className="text-blue-600 hover:underline text-left"

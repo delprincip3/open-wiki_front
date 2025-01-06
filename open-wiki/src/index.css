@@ -38,3 +38,29 @@ body {
 .swal2-html-container-custom::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
+
+/* Aggiungi questi stili per il modal degli articoli */
+.swal-article-popup {
+    padding: 1rem;
+}
+
+.swal-article-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.swal-article-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+.prose {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+}

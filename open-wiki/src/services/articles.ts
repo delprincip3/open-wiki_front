@@ -7,7 +7,7 @@ export const articleService = {
         return response.data;
     },
 
-    async saveArticle(article: Omit<Article, 'id' | 'userId'>) {
+    async saveArticle(article: Omit<Article, 'id' | 'userId' | 'dateDownloaded'>) {
         const response = await articleApi.post<Article>('/articles', article);
         return response.data;
     },

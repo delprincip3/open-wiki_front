@@ -1,8 +1,40 @@
 export interface User {
-  username: string;
   id: string;
+  username: string;
   email: string;
-  avatar: string;
+  avatar?: string;
+}
+
+export interface UserState {
+  user: User | null;
+  isAuthenticated: boolean;
+}
+
+export interface WikiSearchResult {
+  id: number;
+  key: string;
+  title: string;
+  excerpt: string;
+  description: string;
+  thumbnail?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+}
+
+export interface WikiArticle {
+  id: number;
+  key: string;
+  title: string;
+  content?: string;
+  html: string;
+  description: string;
+  thumbnail?: {
+    url: string;
+    width: number;
+    height: number;
+  };
 }
 
 export interface Article {
@@ -11,18 +43,7 @@ export interface Article {
   title: string;
   content: string;
   imageUrl?: string;
+  pageId: string;
+  wikiUrl: string;
   dateDownloaded: string;
-}
-
-export interface FeaturedArticle {
-  title: string;
-  excerpt: string;
-  content: string;
-  imageUrl?: string;
-  url: string;
-}
-
-export interface UserState {
-  user: User | null;
-  isAuthenticated: boolean;
 } 

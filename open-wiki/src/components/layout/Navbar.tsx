@@ -1,19 +1,16 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import type { User } from "@/types";
+import type { WikiSearchResult } from "@/types";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/dist/sweetalert2.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
+import { wikipediaService } from '@/services/wikipedia';
 
 // Questo è un dato mock che verrà sostituito con dati reali dal backend
-const mockUser: User = {
-  username: "Mario Rossi",
-  id: "1",
-  email: "mario.rossi@example.com",
-  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mario"
-};
+
 
 interface NavbarProps {
   onLogoClick: () => void;
@@ -23,11 +20,51 @@ interface NavbarProps {
 export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    
     const searchTerm = e.currentTarget.search.value;
-    console.log("Search submitted:", searchTerm);
+    try {
+      const results = await wikipediaService.search(searchTerm);
+      
+      // Mostra direttamente i risultati senza salvarli nello state
+      await Swal.fire({
+        title: 'Risultati della ricerca',
+        html: `
+          <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+            ${results.map((result: WikiSearchResult) => `
+              <div class="p-4 border rounded">
+                <h3 class="font-bold">${result.title}</h3>
+                <p class="text-sm text-gray-600">${result.excerpt}</p>
+                <div class="mt-2">
+                  <small>ID: ${result.id}</small>
+                  <br/>
+                  <small>Key: ${result.key}</small>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `,
+        width: '600px'
+      });
+
+    } catch (error) {
+      console.error("Search failed:", error);
+      setError("Errore durante la ricerca");
+      
+      await Swal.fire({
+        icon: 'error',
+        title: 'Errore',
+        text: 'Impossibile completare la ricerca. Controlla la console per i dettagli.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogoClick = () => {
@@ -166,10 +203,16 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
             <Input
               name="search"
               className="w-full pl-10"
-              placeholder="Cerca su Open Wiki..."
+              placeholder={isLoading ? "Ricerca in corso..." : "Cerca su Open Wiki..."}
               type="search"
+              disabled={isLoading}
             />
           </div>
+          {error && (
+            <div className="absolute mt-1 text-sm text-red-500">
+              {error}
+            </div>
+          )}
         </form>
 
         <div className="flex items-center space-x-4">
