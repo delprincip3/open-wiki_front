@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,6 +19,7 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,16 +85,25 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
               >
                 Password
               </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="La tua password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="La tua password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <Button
               type="submit"
@@ -114,12 +124,6 @@ export default function LoginPage({ onBack, onRegister }: LoginPageProps) {
               Registrati ora
             </button>
           </div>
-          <button 
-            type="button"
-            className="text-sm text-[#3366cc] hover:underline"
-          >
-            Password dimenticata?
-          </button>
         </CardFooter>
       </Card>
     </div>
