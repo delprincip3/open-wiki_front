@@ -75,81 +75,92 @@ export default function DashboardPage() {
   };
 
   const handleEditArticle = async (article: Article) => {
-    const { value: formValues } = await Swal.fire({
-      title: 'Modifica Articolo',
-      html: `
-        <div class="space-y-4">
-          <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Titolo
-            </label>
-            <input 
-              id="swal-title" 
-              class="w-full px-3 py-2 border rounded-md" 
-              value="${article.title}"
-            >
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Contenuto
-            </label>
-            <textarea 
-              id="swal-content" 
-              class="w-full px-3 py-2 border rounded-md h-32"
-            >${article.content}</textarea>
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              URL Immagine
-            </label>
-            <input 
-              id="swal-image" 
-              class="w-full px-3 py-2 border rounded-md"
-              value="${article.imageUrl || ''}"
-            >
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Salva',
-      cancelButtonText: 'Annulla',
-      width: '32rem',
-      preConfirm: () => {
-        const title = (document.getElementById('swal-title') as HTMLInputElement).value;
-        const content = (document.getElementById('swal-content') as HTMLTextAreaElement).value;
-        const imageUrl = (document.getElementById('swal-image') as HTMLInputElement).value;
-        
-        if (!title.trim() || !content.trim()) {
-          Swal.showValidationMessage('Titolo e contenuto sono obbligatori');
-          return false;
+    try {
+        const { value: formValues } = await Swal.fire({
+            title: 'Modifica Articolo',
+            html: `
+                <div class="space-y-4">
+                    <div class="text-left">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Titolo
+                        </label>
+                        <input 
+                            id="swal-title" 
+                            class="w-full px-3 py-2 border rounded-md" 
+                            value="${article.title}"
+                        >
+                    </div>
+                    <div class="text-left">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Contenuto
+                        </label>
+                        <textarea 
+                            id="swal-content" 
+                            class="w-full px-3 py-2 border rounded-md h-32"
+                        >${article.content}</textarea>
+                    </div>
+                    <div class="text-left">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            URL Immagine
+                        </label>
+                        <input 
+                            id="swal-image" 
+                            class="w-full px-3 py-2 border rounded-md"
+                            value="${article.imageUrl || ''}"
+                        >
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Salva',
+            cancelButtonText: 'Annulla',
+            width: '32rem',
+            preConfirm: () => {
+                const title = (document.getElementById('swal-title') as HTMLInputElement).value;
+                const content = (document.getElementById('swal-content') as HTMLTextAreaElement).value;
+                const imageUrl = (document.getElementById('swal-image') as HTMLInputElement).value;
+                
+                if (!title.trim() || !content.trim()) {
+                    Swal.showValidationMessage('Titolo e contenuto sono obbligatori');
+                    return false;
+                }
+                
+                return {
+                    title,
+                    content,
+                    imageUrl: imageUrl.trim() || undefined
+                };
+            }
+        });
+
+        if (formValues) {
+            // Chiamata al backend per aggiornare l'articolo
+            await articleService.updateArticle(article.id, formValues);
+            
+            // Aggiorna lo stato locale solo dopo la conferma dal backend
+            const updatedArticles = articles.map(a => 
+                a.id === article.id 
+                    ? { ...a, ...formValues }
+                    : a
+            );
+            setArticles(updatedArticles);
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Articolo aggiornato!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
         }
-        
-        return {
-          title,
-          content,
-          imageUrl: imageUrl.trim() || undefined
-        };
-      }
-    });
-
-    if (formValues) {
-      // Qui andrà la chiamata API per aggiornare l'articolo nel backend
-      // Per ora aggiorniamo solo lo stato locale
-      const updatedArticles = articles.map(a => 
-        a.id === article.id 
-          ? { ...a, ...formValues }
-          : a
-      );
-      setArticles(updatedArticles);
-
-      await Swal.fire({
-        icon: 'success',
-        title: 'Articolo aggiornato!',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-      });
+    } catch (error) {
+        console.error('Failed to update article:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Errore',
+            text: 'Impossibile aggiornare l\'articolo'
+        });
     }
   };
 
