@@ -19,7 +19,7 @@ interface NavbarProps {
 
 export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
   const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { user, setAuthState } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -114,73 +114,95 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
   };
 
   const handleProfileClick = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: 'Modifica Profilo',
-      html: `
-        <div class="space-y-4">
-          <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
-            <input 
-              id="swal-username" 
-              class="w-full p-2 border rounded" 
-              value="${user?.username || ''}"
-            />
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Password Attuale
-            </label>
-            <input 
-              type="password" 
-              id="swal-current-password" 
-              class="w-full p-2 border rounded"
-            />
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Nuova Password
-            </label>
-            <input 
-              type="password" 
-              id="swal-new-password" 
-              class="w-full p-2 border rounded"
-            />
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Salva',
-      cancelButtonText: 'Annulla',
-      preConfirm: () => {
-        return {
-          username: (document.getElementById('swal-username') as HTMLInputElement).value,
-          currentPassword: (document.getElementById('swal-current-password') as HTMLInputElement).value,
-          newPassword: (document.getElementById('swal-new-password') as HTMLInputElement).value,
-        };
-      }
-    });
+    try {
+        const result = await Swal.fire({
+            title: 'Modifica Profilo',
+            text: 'Cosa vuoi modificare?',
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Username',
+            denyButtonText: 'Password',
+            cancelButtonText: 'Annulla'
+        });
 
-    if (formValues) {
-      try {
-        await authService.updateProfile(formValues);
-        await refreshUser();
+        if (result.isConfirmed) { // Ha scelto Username
+            const { value: newUsername } = await Swal.fire({
+                title: 'Modifica Username',
+                input: 'text',
+                inputLabel: 'Nuovo Username',
+                inputValue: user?.username || '',
+                showCancelButton: true,
+                inputValidator: (value: string) => {
+                    if (!value) {
+                        return 'Devi inserire un username!';
+                    }
+                }
+            });
+
+            if (newUsername) {
+                await authService.updateProfile({ username: newUsername });
+            } else {
+                return; // Utente ha annullato
+            }
+        } else if (result.isDenied) { // Ha scelto Password
+            const passwordResult = await Swal.fire({
+                title: 'Modifica Password',
+                html: `
+                    <input type="password" id="swal-current-password" class="swal2-input" placeholder="Password attuale">
+                    <input type="password" id="swal-new-password" class="swal2-input" placeholder="Nuova password">
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Salva',
+                preConfirm: () => {
+                    const currentPassword = (document.getElementById('swal-current-password') as HTMLInputElement).value;
+                    const newPassword = (document.getElementById('swal-new-password') as HTMLInputElement).value;
+                    
+                    if (!currentPassword || !newPassword) {
+                        Swal.showValidationMessage('Entrambi i campi sono obbligatori');
+                        return false;
+                    }
+                    
+                    return {
+                        currentPassword,
+                        newPassword
+                    };
+                }
+            });
+
+            if (passwordResult.isConfirmed && passwordResult.value) {
+                await authService.updateProfile(passwordResult.value);
+            } else {
+                return; // Utente ha annullato
+            }
+        } else {
+            return; // Ha cliccato Annulla
+        }
+
+        // Se siamo arrivati qui, significa che una modifica è stata effettuata
         await Swal.fire({
-          icon: 'success',
-          title: 'Profilo aggiornato!',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000
+            icon: 'success',
+            title: 'Profilo aggiornato!',
+            text: 'Per applicare le modifiche è necessario effettuare nuovamente il login con le nuove credenziali',
+            confirmButtonText: 'OK'
         });
-      } catch (error) {
+
+        // Logout e reindirizzamento
+        await authService.logout();
+        setAuthState({
+            user: null,
+            isAuthenticated: false
+        });
+        navigate('/');
+
+    } catch (error) {
+        console.error('Failed to update profile:', error);
         await Swal.fire({
-          icon: 'error',
-          title: 'Errore',
-          text: error instanceof Error ? error.message : 'Errore durante l\'aggiornamento del profilo',
+            icon: 'error',
+            title: 'Errore',
+            text: 'Impossibile aggiornare il profilo'
         });
-      }
     }
   };
 
