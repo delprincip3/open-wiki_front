@@ -136,31 +136,42 @@ export default function DashboardPage() {
   };
 
   const handleDeleteArticle = async (article: Article) => {
-    const result = await Swal.fire({
-      title: 'Sei sicuro?',
-      text: `Vuoi eliminare l'articolo "${article.title}"?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sì, elimina',
-      cancelButtonText: 'Annulla'
-    });
+    try {
+        const result = await Swal.fire({
+            title: 'Sei sicuro?',
+            text: `Vuoi eliminare l'articolo "${article.title}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sì, elimina',
+            cancelButtonText: 'Annulla'
+        });
 
-    if (result.isConfirmed) {
-      // Qui andrà la chiamata API per eliminare l'articolo dal backend
-      // Per ora aggiorniamo solo lo stato locale
-      const updatedArticles = articles.filter(a => a.id !== article.id);
-      setArticles(updatedArticles);
+        if (result.isConfirmed) {
+            // Chiamata al backend per eliminare l'articolo
+            await articleService.deleteArticle(article.id);
+            
+            // Aggiorna lo stato locale solo dopo la conferma dal backend
+            const updatedArticles = articles.filter(a => a.id !== article.id);
+            setArticles(updatedArticles);
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Articolo eliminato!',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-      });
+            await Swal.fire({
+                icon: 'success',
+                title: 'Articolo eliminato!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    } catch (error) {
+        console.error('Failed to delete article:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Errore',
+            text: 'Impossibile eliminare l\'articolo'
+        });
     }
   };
 
@@ -221,19 +232,15 @@ export default function DashboardPage() {
 
   const handleSaveArticle = async (article: WikiArticle) => {
     try {
-        // Verifichiamo che tutti i campi necessari esistano
-        if (!article || !article.title || !article.html) {
-            throw new Error('Dati articolo incompleti');
-        }
-
         const articleToSave = {
             title: article.title,
-            content: article.html || '',
+            content: article.html || article.description || '',
             imageUrl: article.thumbnail?.url || undefined,
             pageId: article.id?.toString() || '',
-            wikiUrl: article.key ? `https://it.wikipedia.org/wiki/${article.key}` : ''
+            wikiUrl: `https://it.wikipedia.org/wiki/${encodeURIComponent(article.title)}`
         };
 
+        console.log('Article to save:', articleToSave); // Debug log
         await articleService.saveArticle(articleToSave);
 
         await Swal.fire({
@@ -249,7 +256,7 @@ export default function DashboardPage() {
         setSelectedView("downloaded");
         await loadSavedArticles();
     } catch (error) {
-        console.error("Failed to save article:", error);
+        console.error('Save article error:', error);
         await Swal.fire({
             icon: 'error',
             title: 'Errore',

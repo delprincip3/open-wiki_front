@@ -8,7 +8,16 @@ export const articleService = {
     },
 
     async saveArticle(article: Omit<Article, 'id' | 'userId' | 'dateDownloaded'>) {
-        const response = await articleApi.post<Article>('/articles', article);
+        // Assicuriamoci che tutti i campi necessari siano presenti e validi
+        const articleToSave = {
+            title: article.title,
+            content: article.content || '',
+            pageId: article.pageId || '',
+            wikiUrl: article.wikiUrl || '',
+            imageUrl: article.imageUrl
+        };
+
+        const response = await articleApi.post<Article>('/articles', articleToSave);
         return response.data;
     },
 

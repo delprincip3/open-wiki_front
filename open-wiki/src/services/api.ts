@@ -13,7 +13,7 @@ export const authApi = axios.create({
     }
 });
 
-// API per Java (gestione articoli e Wikipedia)
+// API per Java (gestione articoli)
 export const articleApi = axios.create({
     baseURL: JAVA_API_URL,
     withCredentials: true,
@@ -46,21 +46,18 @@ const decodeFlaskToken = (cookie: string) => {
     }
 };
 
-// Interceptor per gestire gli errori
+// Interceptor semplificato
 articleApi.interceptors.request.use((config) => {
-    // Prendi il cookie di sessione da Flask
     const cookies = document.cookie.split(';');
     const sessionCookie = cookies.find(cookie => cookie.trim().startsWith('session='));
     
     if (sessionCookie) {
-        // Decodifica il token e ottieni l'user_id
         const decodedToken = decodeFlaskToken(sessionCookie.trim());
-        if (decodedToken && decodedToken.user_id) {
-            // Passa l'user_id come header personalizzato
-            config.headers['X-User-ID'] = decodedToken.user_id;
+        if (decodedToken?.user_id) {
+            config.headers['X-User-ID'] = decodedToken.user_id.toString();
         }
     }
-    
+
     return config;
 });
 
