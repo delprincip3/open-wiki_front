@@ -107,13 +107,21 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
                 });
             } else if (action === false) { // Salva
                 try {
-                    await authService.saveArticle({
+                    // Formatta l'articolo prima di salvarlo
+                    const articleToSave = {
                         title: selectedArticle.title,
-                        content: selectedArticle.excerpt,
-                        pageId: selectedArticle.id,
-                        wikiUrl: selectedArticle.url,
-                        imageUrl: selectedArticle.thumbnail?.url
-                    });
+                        content: selectedArticle.excerpt || selectedArticle.description || '',
+                        pageId: selectedArticle.id.toString(),
+                        wikiUrl: `https://it.wikipedia.org/wiki/${encodeURIComponent(selectedArticle.title)}`,
+                        imageUrl: selectedArticle.thumbnail?.url 
+                            ? selectedArticle.thumbnail.url.startsWith('http') 
+                                ? selectedArticle.thumbnail.url 
+                                : `https:${selectedArticle.thumbnail.url}`
+                            : undefined
+                    };
+
+                    console.log('Article to save:', articleToSave); // Debug log
+                    await authService.saveArticle(articleToSave);
 
                     await Swal.fire({
                         icon: 'success',

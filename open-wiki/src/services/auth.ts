@@ -1,5 +1,6 @@
 import { authApi } from './apiConfig';
 import type { User } from '@/types';
+import { articleApi } from './apiConfig';
 
 export const authService = {
     async register(data: { username: string; password: string }): Promise<User> {
@@ -51,6 +52,26 @@ export const authService = {
         wikiUrl: string;
         imageUrl?: string;
     }): Promise<void> {
-        await authApi.post('/articles', article);
+        try {
+            // Formatta l'articolo nel formato corretto per il DB
+            const formattedArticle = {
+                title: article.title,
+                content: article.content,
+                page_id: article.pageId,        // Converti in snake_case
+                wiki_url: article.wikiUrl,      // Converti in snake_case
+                image_url: article.imageUrl     // Converti in snake_case
+            };
+
+            console.log('Saving formatted article:', formattedArticle); // Debug log
+            
+            // Usa articleApi invece di authApi
+            await articleApi.post('/articles', formattedArticle);
+        } catch (error: any) {
+            console.error('Error saving article:', error);
+            if (error.code === 'ERR_NETWORK') {
+                throw new Error('Impossibile connettersi al server. Verifica la tua connessione.');
+            }
+            throw error;
+        }
     }
 }; 
