@@ -14,7 +14,7 @@ import { wikipediaService } from '@/services/wikipedia';
 
 interface NavbarProps {
   onLogoClick: () => void;
-  currentView: "featured" | "downloaded";
+  currentView: "featured" | "downloaded" | "guide";
 }
 
 export default function Navbar({ onLogoClick, currentView }: NavbarProps) {

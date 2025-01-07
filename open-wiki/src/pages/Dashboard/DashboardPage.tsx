@@ -12,7 +12,7 @@ import { articleService } from '@/services/articles';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [selectedView, setSelectedView] = useState<"featured" | "downloaded">("featured");
+  const [selectedView, setSelectedView] = useState<"featured" | "downloaded" | "guide">("featured");
   const [articles, setArticles] = useState<Article[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 9;
@@ -304,61 +304,122 @@ export default function DashboardPage() {
       <div className="pt-16 flex flex-col lg:flex-row">
         {/* Sidebar - ora responsive */}
         <aside className="w-full lg:w-64 lg:fixed lg:left-0 lg:top-16 lg:bottom-0 bg-white border-b lg:border-b-0 lg:border-r overflow-y-auto">
-          <div className="p-4">
+          <div className="p-4 flex flex-col h-full">
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <ScrollText className="h-5 w-5" />
-                Articoli Scaricati
+                Menu
               </h2>
             </div>
             
+            <div className="space-y-2">
+              <button
+                onClick={() => setSelectedView("downloaded")}
+                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                  selectedView === "downloaded" 
+                    ? "bg-blue-50 text-blue-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                I miei articoli
+              </button>
+            </div>
+
+            {/* Spacer che spinge il pulsante guida in fondo */}
+            <div className="flex-grow" />
+
+            {/* Pulsante guida in fondo */}
             <button
-              onClick={() => setSelectedView("downloaded")}
-              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                selectedView === "downloaded" 
+              onClick={() => setSelectedView("guide")}
+              className={`w-full text-left px-3 py-2 mt-4 rounded-md text-sm transition-colors border-t border-gray-100 ${
+                selectedView === "guide" 
                   ? "bg-blue-50 text-blue-700" 
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              I miei articoli
+              📚 Come funziona Open Wiki
             </button>
           </div>
         </aside>
 
         {/* Main content - ora responsive */}
         <main className="flex-1 p-4 lg:p-6 lg:ml-64">
-          {selectedView === "featured" ? (
-            // Articolo del giorno
-            <Card className="p-4 lg:p-6">
-              <div className="flex flex-col space-y-4">
-                <h1 className="text-xl lg:text-2xl font-serif text-gray-900">
-                  Articolo del Giorno
-                </h1>
-                {featuredArticle && featuredArticle.thumbnail && (
-                    <div className="relative h-48 w-full overflow-hidden rounded-lg mb-4">
-                        <img
-                            src={featuredArticle.thumbnail.url.replace(/^\/\//, 'https://')}
-                            alt={featuredArticle.title}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            onError={(e) => {
-                                console.error('Errore caricamento immagine:', featuredArticle.thumbnail?.url);
-                                e.currentTarget.style.display = 'none';
-                            }}
-                            onLoad={() => console.log('Immagine caricata:', featuredArticle.thumbnail?.url)}
-                        />
-                    </div>
-                )}
-                <h2 className="text-lg lg:text-xl font-semibold">{featuredArticle?.title}</h2>
-                <p className="text-gray-600">{featuredArticle?.description}</p>
-                <button
-                  onClick={handleReadFullArticle}
-                  className="text-blue-600 hover:underline text-left"
-                >
-                  Leggi l'articolo completo
-                </button>
+          {selectedView === "guide" ? (
+            <div className="p-6 bg-white rounded-lg shadow">
+              <h2 className="text-2xl font-serif text-gray-900 mb-6">
+                🎯 Inizia a usare Open Wiki
+              </h2>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-[#3366cc]">
+                          Navigazione Base
+                      </h3>
+                      <ul className="space-y-2 text-gray-600">
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Clicca su "Open Wiki" per tornare all'articolo del giorno
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Usa la barra di ricerca per trovare articoli su Wikipedia
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Seleziona "I miei articoli" nella sidebar per vedere gli articoli salvati
+                          </li>
+                      </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-[#3366cc]">
+                          Gestione Articoli
+                      </h3>
+                      <ul className="space-y-2 text-gray-600">
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Clicca "Leggi" per visualizzare l'articolo completo
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Usa "Salva" per aggiungere un articolo alla tua collezione
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Modifica o elimina gli articoli salvati usando i pulsanti dedicati
+                          </li>
+                      </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-[#3366cc]">
+                          Profilo Utente
+                      </h3>
+                      <ul className="space-y-2 text-gray-600">
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Clicca sul tuo username in alto a destra per gestire il profilo
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Puoi modificare username e password dalle impostazioni del profilo
+                          </li>
+                          <li className="flex items-start gap-2">
+                              <span className="text-[#3366cc]">•</span>
+                              Dopo la modifica del profilo, dovrai effettuare nuovamente il login
+                          </li>
+                      </ul>
+                  </div>
               </div>
-            </Card>
-          ) : (
+
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                      <strong>Suggerimento:</strong> Puoi accedere a questa guida in qualsiasi momento 
+                      dal menu laterale.
+                  </p>
+              </div>
+            </div>
+          ) : selectedView === "downloaded" ? (
             <div className="space-y-6 lg:space-y-8">
               {/* Grid responsiva migliorata */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
@@ -424,6 +485,37 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+          ) : (
+            // Articolo del giorno
+            <Card className="p-4 lg:p-6">
+              <div className="flex flex-col space-y-4">
+                <h1 className="text-xl lg:text-2xl font-serif text-gray-900">
+                  Articolo del Giorno
+                </h1>
+                {featuredArticle && featuredArticle.thumbnail && (
+                    <div className="relative h-48 w-full overflow-hidden rounded-lg mb-4">
+                        <img
+                            src={featuredArticle.thumbnail.url.replace(/^\/\//, 'https://')}
+                            alt={featuredArticle.title}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onError={(e) => {
+                                console.error('Errore caricamento immagine:', featuredArticle.thumbnail?.url);
+                                e.currentTarget.style.display = 'none';
+                            }}
+                            onLoad={() => console.log('Immagine caricata:', featuredArticle.thumbnail?.url)}
+                        />
+                    </div>
+                )}
+                <h2 className="text-lg lg:text-xl font-semibold">{featuredArticle?.title}</h2>
+                <p className="text-gray-600">{featuredArticle?.description}</p>
+                <button
+                  onClick={handleReadFullArticle}
+                  className="text-blue-600 hover:underline text-left"
+                >
+                  Leggi l'articolo completo
+                </button>
+              </div>
+            </Card>
           )}
         </main>
       </div>
