@@ -438,9 +438,6 @@ export default function DashboardPage() {
                       <h3 className="font-semibold text-base lg:text-lg mb-2 line-clamp-2">
                         {article.title}
                       </h3>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Scaricato il: {new Date(article.dateDownloaded).toLocaleDateString()}
-                      </p>
                       <div className="mt-auto flex flex-col sm:flex-row gap-2 sm:justify-end">
                         <Button
                           variant="outline"
