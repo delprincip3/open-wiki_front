@@ -40,8 +40,26 @@ export default function DashboardPage() {
       try {
         const userArticles = await articleService.getArticles();
         setArticles(userArticles);
+        
+        // Se non ci sono articoli, mostra un messaggio informativo
+        if (userArticles.length === 0) {
+          await Swal.fire({
+            icon: 'info',
+            title: 'Nessun articolo',
+            text: 'Non hai ancora salvato nessun articolo',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+        }
       } catch (error) {
         console.error("Failed to load saved articles:", error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Errore',
+          text: error instanceof Error ? error.message : 'Impossibile caricare gli articoli'
+        });
       }
     }
   };
