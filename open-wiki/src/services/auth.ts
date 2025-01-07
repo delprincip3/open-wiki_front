@@ -1,125 +1,46 @@
-const API_URL = 'http://localhost:5001';
+import { authApi } from './apiConfig';
+import type { User } from '@/types';
 
 export const authService = {
-    async login(username: string, password: string) {
-        const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            credentials: 'include',  // Per gestire i cookie di sessione
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
-        });
-
-        if (!response.ok) {
-            throw new Error('Login failed');
-        }
-
-        return response.json();
-    },
-
-    async testConnection() {
+    async register(data: { username: string; password: string }): Promise<User> {
         try {
-            const response = await fetch(`${API_URL}/auth/test`, {
-                method: 'GET',
-                credentials: 'include'
-            });
-            return response.ok;
-        } catch (error) {
-            console.error('Connection test failed:', error);
-            return false;
-        }
-    },
-
-    async register(userData: {
-        username: string;
-        password: string;
-    }) {
-        // Prima testa la connessione
-        const isConnected = await this.testConnection();
-        if (!isConnected) {
-            throw new Error('Cannot connect to server');
-        }
-
-        try {
-            console.log('Sending registration request:', userData);
-            
-            const response = await fetch(`${API_URL}/auth/register`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
-
-            console.log('Response received:', response.status);
-            
-            const data = await response.json();
-            console.log('Response data:', data);
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Registration failed');
+            const response = await authApi.post('/auth/register', data);
+            return response.data;
+        } catch (error: any) {
+            if (error.code === 'ERR_NETWORK') {
+                throw new Error('Impossibile connettersi al server. Verifica la tua connessione.');
             }
-
-            return data;
-        } catch (error) {
-            console.error('Registration error details:', error);
             throw error;
         }
     },
 
-    async getUser() {
-        const response = await fetch(`${API_URL}/auth/user`, {
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to get user');
+    async login(username: string, password: string): Promise<User> {
+        try {
+            const response = await authApi.post('/auth/login', { username, password });
+            return response.data;
+        } catch (error: any) {
+            if (error.code === 'ERR_NETWORK') {
+                throw new Error('Impossibile connettersi al server. Verifica la tua connessione.');
+            }
+            throw error;
         }
-
-        return response.json();
     },
 
-    async logout() {
-        const response = await fetch(`${API_URL}/auth/logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
+    async logout(): Promise<void> {
+        await authApi.post('/auth/logout');
+    },
 
-        if (!response.ok) {
-            throw new Error('Logout failed');
-        }
-
-        return response.json();
+    async getCurrentUser(): Promise<User> {
+        const response = await authApi.get('/auth/me');
+        return response.data;
     },
 
     async updateProfile(updates: {
         username?: string;
         currentPassword?: string;
         newPassword?: string;
-    }) {
-        try {
-            const response = await fetch(`${API_URL}/auth/update-profile`, {
-                method: 'PUT',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updates)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Profile update failed');
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Profile update error:', error);
-            throw error;
-        }
+    }): Promise<User> {
+        const response = await authApi.put('/auth/update-profile', updates);
+        return response.data;
     }
 }; 
