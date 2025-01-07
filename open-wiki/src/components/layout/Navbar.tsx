@@ -30,40 +30,106 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
     
     const searchTerm = e.currentTarget.search.value;
     try {
-      const results = await wikipediaService.search(searchTerm);
-      
-      // Mostra direttamente i risultati senza salvarli nello state
-      await Swal.fire({
-        title: 'Risultati della ricerca',
-        html: `
-          <div class="space-y-4 max-h-[60vh] overflow-y-auto">
-            ${results.map((result: WikiSearchResult) => `
-              <div class="p-4 border rounded">
-                <h3 class="font-bold">${result.title}</h3>
-                <p class="text-sm text-gray-600">${result.excerpt}</p>
-                <div class="mt-2">
-                  <small>ID: ${result.id}</small>
-                  <br/>
-                  <small>Key: ${result.key}</small>
+        const results = await wikipediaService.search(searchTerm);
+        
+        // Mostra i risultati con pulsanti per selezionare
+        const { value: selectedArticle } = await Swal.fire({
+            title: 'Risultati della ricerca',
+            html: `
+                <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+                    ${results.map((result: WikiSearchResult, index: number) => `
+                        <div 
+                            class="p-4 border rounded hover:bg-gray-50 cursor-pointer article-result" 
+                            data-index="${index}"
+                        >
+                            <h3 class="font-bold">${result.title}</h3>
+                            <p class="text-sm text-gray-600">${result.excerpt}</p>
+                        </div>
+                    `).join('')}
                 </div>
-              </div>
-            `).join('')}
-          </div>
-        `,
-        width: '600px'
-      });
+            `,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: 'Seleziona',
+            cancelButtonText: 'Annulla',
+            didOpen: (modal: HTMLElement) => {
+                const articles = modal.querySelectorAll('.article-result');
+                articles.forEach((article, index) => {
+                    article.addEventListener('click', () => {
+                        articles.forEach(a => a.classList.remove('bg-blue-50'));
+                        article.classList.add('bg-blue-50');
+                        // Quando un articolo viene selezionato, abilitiamo il pulsante e salviamo l'articolo
+                        Swal.getConfirmButton()?.removeAttribute('disabled');
+                        (window as any).selectedResult = results[index];
+                    });
+                });
+                Swal.getConfirmButton()?.setAttribute('disabled', '');
+            },
+            preConfirm: () => {
+                return (window as any).selectedResult;
+            }
+        });
 
+        if (selectedArticle) {
+            const { value: action } = await Swal.fire({
+                title: selectedArticle.title,
+                text: 'Cosa vuoi fare con questo articolo?',
+                icon: 'question',
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: 'Leggi',
+                denyButtonText: 'Salva',
+                cancelButtonText: 'Annulla'
+            });
+
+            if (action) { // Leggi
+                const article = await wikipediaService.getArticle(selectedArticle.key);
+                await Swal.fire({
+                    title: article.title,
+                    html: `<div class="prose max-w-none">${article.html}</div>`,
+                    width: '800px',
+                    showCloseButton: true,
+                    showConfirmButton: false
+                });
+            } else if (action === false) { // Salva
+                try {
+                    await authService.saveArticle({
+                        title: selectedArticle.title,
+                        content: selectedArticle.excerpt,
+                        pageId: selectedArticle.id,
+                        wikiUrl: selectedArticle.url,
+                        imageUrl: selectedArticle.thumbnail?.url
+                    });
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Articolo salvato!',
+                        text: 'Puoi trovarlo nella sezione articoli salvati',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                } catch (error) {
+                    console.error('Save failed:', error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Errore',
+                        text: 'Impossibile salvare l\'articolo'
+                    });
+                }
+            }
+        }
     } catch (error) {
-      console.error("Search failed:", error);
-      setError("Errore durante la ricerca");
-      
-      await Swal.fire({
-        icon: 'error',
-        title: 'Errore',
-        text: 'Impossibile completare la ricerca. Controlla la console per i dettagli.'
-      });
+        console.error("Search failed:", error);
+        setError("Errore durante la ricerca");
+        await Swal.fire({
+            icon: 'error',
+            title: 'Errore',
+            text: 'Impossibile completare la ricerca'
+        });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 

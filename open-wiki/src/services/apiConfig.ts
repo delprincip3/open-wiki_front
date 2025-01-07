@@ -34,9 +34,24 @@ export const wikiApi = axios.create({
 authApi.interceptors.response.use(
     response => response,
     error => {
-        if (error.response?.status === 401 && window.location.pathname !== '/') {
-            window.location.href = '/';
+        if (error.code === 'ERR_NETWORK') {
+            console.error('Network error:', error);
+            throw new Error('Impossibile connettersi al server. Verifica la tua connessione.');
         }
+        throw error;
+    }
+);
+
+// Interceptor per debugging SOLO per richieste non sensibili
+authApi.interceptors.request.use(
+    config => {
+        // Non logghiamo mai le richieste di autenticazione
+        if (!config.url?.includes('/auth/')) {
+            console.log('Request URL:', config.url);
+        }
+        return config;
+    },
+    error => {
         return Promise.reject(error);
     }
 );

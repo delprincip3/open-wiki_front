@@ -42,5 +42,15 @@ export const authService = {
     }): Promise<User> {
         const response = await authApi.put('/auth/update-profile', updates);
         return response.data;
+    },
+
+    async saveArticle(article: {
+        title: string;
+        content: string;
+        pageId: string;
+        wikiUrl: string;
+        imageUrl?: string;
+    }): Promise<void> {
+        await authApi.post('/articles', article);
     }
 }; 

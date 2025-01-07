@@ -68,5 +68,15 @@ export const wikipediaService = {
             console.error('Error getting featured article:', error);
             throw error;
         }
+    },
+
+    async downloadArticle(title: string) {
+        try {
+            const response = await wikiApi.get(`/page/${encodeURIComponent(title)}/with_html`);
+            return response.data;
+        } catch (error) {
+            console.error('Error getting article:', error);
+            throw error;
+        }
     }
 }; 
