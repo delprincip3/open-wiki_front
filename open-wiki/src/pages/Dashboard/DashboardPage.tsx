@@ -263,13 +263,17 @@ export default function DashboardPage() {
     try {
         const articleToSave = {
             title: article.title,
-            content: article.html || article.description || '',
-            imageUrl: article.thumbnail?.url || undefined,
+            content: article.html || article.content || article.description || '',
             pageId: article.id?.toString() || '',
-            wikiUrl: `https://it.wikipedia.org/wiki/${encodeURIComponent(article.title)}`
+            wikiUrl: `https://it.wikipedia.org/wiki/${encodeURIComponent(article.title)}`,
+            imageUrl: article.thumbnail?.url 
+                ? article.thumbnail.url.startsWith('http') 
+                    ? article.thumbnail.url 
+                    : `https:${article.thumbnail.url}`
+                : undefined
         };
 
-        console.log('Article to save:', articleToSave); // Debug log
+        console.log('Article to save:', articleToSave);
         await articleService.saveArticle(articleToSave);
 
         await Swal.fire({
@@ -289,7 +293,7 @@ export default function DashboardPage() {
         await Swal.fire({
             icon: 'error',
             title: 'Errore',
-            text: 'Impossibile salvare l\'articolo. Verifica che tutti i dati siano presenti.'
+            text: 'Impossibile salvare l\'articolo'
         });
     }
   };

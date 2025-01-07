@@ -2,6 +2,15 @@ import { authApi } from './apiConfig';
 import type { User } from '@/types';
 import { articleApi } from './apiConfig';
 
+// Aggiungiamo una funzione helper per formattare l'articolo
+const formatArticleForSave = (article: any) => ({
+    title: article.title,
+    content: article.content,
+    pageId: article.pageId || article.page_id,
+    wikiUrl: article.wikiUrl || article.wiki_url,
+    imageUrl: article.imageUrl || article.image_url || undefined
+});
+
 export const authService = {
     async register(data: { username: string; password: string }): Promise<User> {
         try {
@@ -45,25 +54,9 @@ export const authService = {
         return response.data;
     },
 
-    async saveArticle(article: {
-        title: string;
-        content: string;
-        pageId: string;
-        wikiUrl: string;
-        imageUrl?: string;
-    }): Promise<void> {
+    async saveArticle(article: any): Promise<void> {
+        const formattedArticle = formatArticleForSave(article);
         try {
-            // Formatta l'articolo nel formato corretto per il DB
-            const formattedArticle = {
-                title: article.title,
-                content: article.content,
-                page_id: article.pageId,        // Converti in snake_case
-                wiki_url: article.wikiUrl,      // Converti in snake_case
-                image_url: article.imageUrl     // Converti in snake_case
-            };
-
-            console.log('Saving formatted article:', formattedArticle); // Debug log
-            
             // Usa articleApi invece di authApi
             await articleApi.post('/articles', formattedArticle);
         } catch (error: any) {
