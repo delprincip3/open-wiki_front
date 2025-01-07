@@ -42,8 +42,22 @@ export default function Navbar({ onLogoClick, currentView }: NavbarProps) {
                             class="p-4 border rounded hover:bg-gray-50 cursor-pointer article-result" 
                             data-index="${index}"
                         >
-                            <h3 class="font-bold">${result.title}</h3>
-                            <p class="text-sm text-gray-600">${result.excerpt}</p>
+                            <div class="flex gap-4">
+                                ${result.thumbnail ? `
+                                    <div class="flex-shrink-0">
+                                        <img 
+                                            src="${result.thumbnail.url}" 
+                                            alt="${result.title}"
+                                            class="w-24 h-24 object-cover rounded"
+                                            onerror="this.style.display='none'"
+                                        />
+                                    </div>
+                                ` : ''}
+                                <div class="flex-grow">
+                                    <h3 class="font-bold">${result.title}</h3>
+                                    <p class="text-sm text-gray-600">${result.excerpt}</p>
+                                </div>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
